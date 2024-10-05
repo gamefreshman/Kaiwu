@@ -11,13 +11,13 @@ import time
 import math
 from ppo.config import GameConfig
 
-hero_money_limit = {
+hero_money_limit = {    #英雄金钱限制
     133: 6200,  #狄仁杰
     199: 8900,  #公孙离
     508: 12400, #伽罗
 }
 
-skill_hit_reward_weight = { #？
+skill_hit_reward_weight = { #技能命中奖励权重
     133: {
         0: 0.01,
         1: 0.3,
@@ -38,21 +38,21 @@ skill_hit_reward_weight = { #？
     }
 }
 
-usingProgressiveRewardAdjustment = True #选择是否使用阶段性奖励适配
-rewardChangeInterval = 7200  # /s   #？
-rewardChangeStep = 30   #？
-rewardChangeTimeList = [timeNode for timeNode in range(0, rewardChangeInterval, rewardChangeStep)]    #?
+usingProgressiveRewardAdjustment = True #选择是否使用阶段性奖励调整
+rewardChangeInterval = 7200   #奖励变化间隔
+rewardChangeStep = 30   #步长？学习率？
+rewardChangeTimeList = [timeNode for timeNode in range(0, rewardChangeInterval, rewardChangeStep)]    #奖励变化时间列表 #为什么这样子设置？
 
-def get_progressive_reward_map(old_map, new_map, timeNode):   #?
+def get_progressive_reward_map(old_map, new_map, timeNode):   #奖励映射调整函数 - 根据时间节点逐步调整奖励映射，使奖励更加平滑地变化。
     for key in GameConfig.REWARD_WEIGHT_DICT_1.keys():
-        new_map[key].weight = old_map[key].weight + (new_map[key].weight - old_map[key].weight) * timeNode / rewardChangeInterval
+        new_map[key].weight = old_map[key].weight + (new_map[key].weight - old_map[key].weight) * timeNode / rewardChangeInterval # 越到后期学的越多？
     return new_map
 
 
 # Used to record various reward information
 # 用于记录各个奖励信息
 class RewardStruct: 
-    def __init__(self, m_weight=0.0):   #?
+    def __init__(self, m_weight=0.0):   #初始化奖励信息
         self.cur_frame_value = 0.0
         self.last_frame_value = 0.0
         self.value = 0.0
@@ -65,11 +65,12 @@ class RewardStruct:
 # 用于初始化各个奖励信息
 def init_calc_frame_map():
     calc_frame_map = {}
-    for key, weight in GameConfig.REWARD_WEIGHT_DICT_1.items():
+    for key, weight in GameConfig.REWARD_WEIGHT_DICT_1.items(): #这里的weight是什么？
         calc_frame_map[key] = RewardStruct(weight)
     return calc_frame_map
 
-def change_calc_frame_map(calc_frame_map, stage, frame_no):
+def change_calc_frame_map(calc_frame_map, stage, frame_no):  #根据游戏的当前阶段（stage）和帧号（frame_no）调整奖励权重映射
+    #它将根据已过的帧数（frame_no）在 GameConfig.REWARD_WEIGHT_DICT_n 和 GameConfig.REWARD_WEIGHT_DICT_n+1 之间插值来更新权重。
     if stage == 1:
         for key, weight in GameConfig.REWARD_WEIGHT_DICT_1.items():
             calc_frame_map[key].weight = weight + (GameConfig.REWARD_WEIGHT_DICT_2[key] - weight)*(frame_no-0)/(3600-0)
@@ -83,7 +84,7 @@ def change_calc_frame_map(calc_frame_map, stage, frame_no):
             calc_frame_map[key].weight = weight + (GameConfig.REWARD_WEIGHT_DICT_4[key] - weight)*(frame_no-12000)/(20000-12000)
         return calc_frame_map
 
-def change_target_calc_frame_map(calc_frame_map, stage, frame_no):
+def change_target_calc_frame_map(calc_frame_map, stage, frame_no):  #与 change_calc_frame_map 类似，但它用于目标奖励权重的调整
     if stage == 1:
         for key, weight in GameConfig.TARGET_REWARD_WEIGHT_DICT_1.items():
             calc_frame_map[key].weight = weight + (GameConfig.REWARD_WEIGHT_DICT_2[key] - weight)*(frame_no-0)/(3600-0)
