@@ -101,26 +101,32 @@ def change_target_calc_frame_map(calc_frame_map, stage, frame_no):  #与 change_
 
 class GameRewardManager:
     def __init__(self, main_hero_runtime_id):
-        self.time_step = -1
-        self.stage_1_2 = GameConfig.REWARD_WEIGHT_CHANGE_POINT_1_2
-        self.stage_2_3 = GameConfig.REWARD_WEIGHT_CHANGE_POINT_2_3
-        self.stage_1_weight = GameConfig.REWARD_WEIGHT_DICT_1
-        self.stage_2_weight = GameConfig.REWARD_WEIGHT_DICT_2
-        self.stage_3_weight = GameConfig.REWARD_WEIGHT_DICT_3
-        self.main_hero_player_id = main_hero_runtime_id
-        self.main_hero_camp = -1
-        self.main_hero_hp = -1
-        self.main_hero_organ_hp = -1
-        self.m_reward_value = {}
-        self.m_last_frame_no = -1
-        self.m_cur_calc_frame_map = init_calc_frame_map()
-        self.m_main_calc_frame_map = init_calc_frame_map()
-        self.m_enemy_calc_frame_map = init_calc_frame_map()
-        self.m_init_calc_frame_map = {}
-        self.time_scale_arg = GameConfig.TIME_SCALE_ARG
-        self.m_main_hero_config_id = -1
-        self.m_each_level_max_exp = {}
-        self.start_time = 1727897050
+        self.time_step = -1                                             # 时间步
+
+        self.stage_1_2 = GameConfig.REWARD_WEIGHT_CHANGE_POINT_1_2      # 表示第一阶段和第二阶段之间奖励权重变化的点
+        self.stage_2_3 = GameConfig.REWARD_WEIGHT_CHANGE_POINT_2_3      
+
+        self.stage_1_weight = GameConfig.REWARD_WEIGHT_DICT_1           # 第一阶段的奖励权重字典
+        self.stage_2_weight = GameConfig.REWARD_WEIGHT_DICT_2           
+        self.stage_3_weight = GameConfig.REWARD_WEIGHT_DICT_3           
+
+        self.main_hero_player_id = main_hero_runtime_id                 # 主英雄的玩家ID
+        self.main_hero_camp = -1                                        # 主英雄的阵营
+        self.main_hero_hp = -1                                          # 主英雄的生命值           
+        self.main_hero_organ_hp = -1                                    # 主英雄的法力值
+        self.m_reward_value = {}                                        # 用于存储每一帧的奖励值的字典。
+        self.m_last_frame_no = -1                                       # 上一帧的帧号
+
+        self.m_cur_calc_frame_map = init_calc_frame_map()               # 当前帧的奖励映射
+        self.m_main_calc_frame_map = init_calc_frame_map()              # 主英雄的奖励映射
+        self.m_enemy_calc_frame_map = init_calc_frame_map()             # 敌方英雄的奖励映射
+        self.m_init_calc_frame_map = {}                                 # 初始化的奖励映射
+
+        self.time_scale_arg = GameConfig.TIME_SCALE_ARG                 # 时间缩放参数
+        
+        self.m_main_hero_config_id = -1                                 # 主英雄的配置ID
+        self.m_each_level_max_exp = {}                                  # 每个等级的最大经验值
+        self.start_time = 1727897050                                    # 这个时间是用来干什么的？
 
     # Used to initialize the maximum experience value for each agent level
     # 用于初始化智能体各个等级的最大经验值
