@@ -16,6 +16,7 @@ import random
 import itertools
 import os
 import json
+from collections import OrderedDict
 
 from ppo.config import GameConfig
 
@@ -44,7 +45,9 @@ def _lineup_iterator_shuffle_cycle(camps):
         for camp in camps:
             yield camp
 
-
+# 508对一切
+# 133对508
+# 199对133，508
 # Specify single-side multi-agent lineups, looping through all pairwise combinations
 # 指定单边多智能体阵容，两两组合循环
 def lineup_iterator_roundrobin_camp_heroes(camp_heroes=None):
@@ -65,6 +68,10 @@ def lineup_iterator_roundrobin_camp_heroes(camp_heroes=None):
         camp = []
         for lineup in lineups:
             camp.append(lineup)
+        # if 508 in camp:
+        #     camps.append(camp)
+        # if 133 in camp and 199 in camp:
+        #     camps.append(camp)
         camps.append(camp)
     return _lineup_iterator_shuffle_cycle(camps)
 
@@ -195,6 +202,10 @@ class FrameCollector:
         # load config from config file
         self.gamma = Config.GAMMA
         self.lamda = Config.LAMDA
+        self.last_data_size = 8
+        self.last_sample_batch = [[] for _ in range(2)]
+        self.last_sample_lstm = [[] for _ in range(2)]
+        self.is_first_frame = [1, 1]
 
     def reset(self, num_agents):
         self.num_agents = num_agents
@@ -289,6 +300,7 @@ class FrameCollector:
         first_frame_no = -1
 
         for i in range(self.num_agents):
+            have_bullet = False
             sample_lstm = np.zeros([sample_lstm_size])
             cnt = 0
             for j in self.rl_data_map[i]:
@@ -304,6 +316,10 @@ class FrameCollector:
                 dlen = rl_info.feature.shape[0]
                 sample_batch[cnt, idx : idx + dlen] = rl_info.feature
                 idx += dlen
+
+                # 判断是否有bullet
+                have_bullet = ((sum(rl_info.feature[726:756]) != 0) or have_bullet)
+                print(have_bullet)
 
                 # legal_action
                 dlen = rl_info.legal_action.shape[0]
@@ -345,11 +361,23 @@ class FrameCollector:
                 assert idx == sample_one_size, "Sample check failed, {}/{}".format(idx, sample_one_size)
 
                 cnt += 1
+                if cnt == self.last_data_size and self.is_first_frame[i] == 0:
+                    self.last_sample_lstm[i] = rl_info.lstm_info
                 if cnt == self._LSTM_FRAME:
                     cnt = 0
+                    if self.is_first_frame[i] == 0:
+                        input = np.vstack((self.last_sample_batch[i], sample_batch[:self.last_data_size]))
+                        sample = self._reshape_lstm_batch_sample(input, self.last_sample_lstm[i])
+                        self.m_replay_buffer[i].append(sample)
                     sample = self._reshape_lstm_batch_sample(sample_batch, sample_lstm)
                     self.m_replay_buffer[i].append(sample)
+                    if have_bullet:
+                        self.m_replay_buffer[i].append(sample)
+                    self.last_sample_batch[i] = sample_batch[-self.last_data_size:]
+                    if self.is_first_frame[i] == 1:
+                        self.is_first_frame[i] = 0
                     sample_lstm = rl_info.lstm_info
+                    have_bullet = False
 
     def _clip_reward(self, reward, max=100, min=-100):
         if reward > max:

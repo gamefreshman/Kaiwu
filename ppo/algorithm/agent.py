@@ -159,7 +159,7 @@ class Agent(BaseAgent):
         self.model = self.model.to(self.device).to(memory_format=torch.channels_last)
         
         self.model.set_eval_mode()
-        example_inputs = [torch.rand(1, 725+114+buff_info_len).to(self.device), torch.rand(1, 384).to(self.device), torch.rand(1, 384).to(self.device)]
+        example_inputs = [torch.rand(1, 725+114+buff_info_len).to(self.device), torch.rand(1, 256).to(self.device), torch.rand(1, 256).to(self.device)]
         self.scripted_model = torch.jit.trace(self.model, example_inputs=(example_inputs,)).to(self.device)
 
 
