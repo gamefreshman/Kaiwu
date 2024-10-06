@@ -66,15 +66,16 @@ def run_episodes(envs, agents, logger, monitor):
     lineup_iter = lineup_iterator_roundrobin_camp_heroes(camp_heroes=GameConfig.CAMP_HEROES)
     # Frame Collector
     # 帧收集器
-    frame_collector = FrameCollector(agent_num)
+    frame_collector = FrameCollector(agent_num)     # ？
     # Make eval matches as evenly distributed as possible
     # 引入随机因子，让eval对局尽可能平均分布
-    random_eval_start = random.randint(0, GameConfig.EVAL_FREQ)
+    random_eval_start = random.randint(0, GameConfig.EVAL_FREQ)     # ？
 
     # Single environment process (30 frame/s)
     # 单局流程 (30 frame/s)
     while True:
-        high_difficulty_samples = []
+        high_difficulty_samples = []    # ？
+
         # Settings before starting a new environment
         # 以下是启动一个新对局前的设置
 
@@ -91,23 +92,23 @@ def run_episodes(envs, agents, logger, monitor):
             # 设置评估时的对手智能体类型，默认采用了common_ai，可选择: "common_ai" - 基于规则的智能体, model_id - 对手模型的ID, 模型ID内容可在kaiwu.json里查看和设置
             #opponent_agent = "common_ai"
             # opponent_agent = "24259"
-            opponent_agent = np.random.choice(["common_ai", "29946", "30470"])
+            opponent_agent = np.random.choice(["common_ai", "29946", "30470"]) #对手模型随机选择    #监控：某个胜率越高：代表 训练模型 打 某个对手模型 的胜率越高
 
         # Generate a new set of agent configurations
-        # 生成一组新的智能体配置
+        # 生成一组新的智能体对手配置
         heroes_config = next(lineup_iter)
 
         usr_conf = {
             "diy": {
                 # The side reporting the environment metrics
                 # 上报对局指标的阵营
-                "monitor_side": train_agent_id,
+                "monitor_side": train_agent_id,     # 设置要训练的智能体的id，id=0表示蓝方，id=1表示红方
                 # The label for reporting environment metrics: selfplay - "selfplay", common_ai - "common_ai", opponent model - model_id
                 # 上报对局指标的标签： 自对弈 - "selfplay", common_ai - "common_ai", 对手模型 - model_id
-                "monitor_label": opponent_agent,
+                "monitor_label": opponent_agent,    # 对手模型
                 # Indicates the lineups used by both sides
                 # 表示双方使用的阵容
-                "lineups": heroes_config,
+                "lineups": heroes_config,           # 智能体对手配置
                 # "lineups": [[{'hero_id': 199}], [{'hero_id': 199}]],
             }
         }
@@ -145,7 +146,7 @@ def run_episodes(envs, agents, logger, monitor):
             agent.reset(camp, player_id)
 
             # The agent to be trained should load the latest model
-            # 要训练的智能体应加载最新的模型
+            # 要训练的智能体 应 加载最新的模型
             if i == train_agent_id:
                 # train_agent_id uses the latest model
                 # train_agent_id 使用最新模型
@@ -263,12 +264,12 @@ def run_episodes(envs, agents, logger, monitor):
                         )
 
                 monitor_data = {
-                    "reward": round(total_reward_dicts[train_agent_id]["reward_sum"], 2),
-                    "diy_1": round(total_reward_dicts[train_agent_id]["forward"], 2),
-                    "diy_2": round(total_reward_dicts[train_agent_id]["close_to_cake"], 2),
-                    "diy_3": round(total_reward_dicts[train_agent_id]["extra_mov_spd"], 2),
-                    "diy_4": round(total_reward_dicts[train_agent_id]["hit_target"], 2),
-                    "diy_5": -round(total_reward_dicts[train_agent_id]["hit_by_organ"], 2),
+                    "reward": round(total_reward_dicts[train_agent_id]["reward_sum"], 2),       # 总奖励
+                    "diy_1": round(total_reward_dicts[train_agent_id]["forward"], 2),           # 向前奖励
+                    "diy_2": round(total_reward_dicts[train_agent_id]["close_to_cake"], 2),     # 靠近血包奖励
+                    "diy_3": round(total_reward_dicts[train_agent_id]["extra_mov_spd"], 2),     # 额外移速奖励
+                    "diy_4": round(total_reward_dicts[train_agent_id]["hit_target"], 2),        # 攻击目标奖励
+                    "diy_5": -round(total_reward_dicts[train_agent_id]["hit_by_organ"], 2),     # 被塔攻击奖励
                 }
 
                 if monitor and is_eval:

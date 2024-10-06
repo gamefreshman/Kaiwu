@@ -40,7 +40,7 @@ NONE_ACTION = [0, 15, 15, 15, 15, 0]
 # 循环返回camps, 每次大循环前对camps进行shuffle
 def _lineup_iterator_shuffle_cycle(camps):
     while True:
-        random.shuffle(camps)
+        random.shuffle(camps)   #shuffle打乱顺序
         for camp in camps:
             yield camp
 
@@ -51,7 +51,7 @@ def lineup_iterator_roundrobin_camp_heroes(camp_heroes=None):
     if not camp_heroes:
         raise Exception(f"camp_heroes is empty")
 
-    try:
+    try:    #异常处理
         valid_ids = [133, 199, 508]
         for camp in camp_heroes:
             hero_id = camp[0]["hero_id"]
@@ -60,13 +60,13 @@ def lineup_iterator_roundrobin_camp_heroes(camp_heroes=None):
     except Exception as e:
         raise Exception(f"check hero valid, exception is {str(e)}")
 
-    camps = []
+    camps = []  #形成组队表格
     for lineups in itertools.product(camp_heroes, camp_heroes):
         camp = []
         for lineup in lineups:
             camp.append(lineup)
         camps.append(camp)
-    return _lineup_iterator_shuffle_cycle(camps)
+    return _lineup_iterator_shuffle_cycle(camps) #返回迭代器
 
 
 @attached
