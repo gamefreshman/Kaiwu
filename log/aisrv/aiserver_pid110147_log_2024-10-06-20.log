@@ -1,0 +1,2 @@
+{"time": "2024-10-06 20:10:26.532361", "level": "INFO", "message": "aisrv AiServer AiSrvHandle with address: 127.0.0.1:5566 start", "file": "aisrv_server_standard.py", "line": "533", "module": "aisrv", "process": "aisrv_server_standard", "function": "start_aisrv_handler"}
+{"time": "2024-10-06 20:10:26.538821", "level": "INFO", "message": "aisrv AiServer is start success at 0.0.0.0:8000, pid is 110147, run_mode is train, self_play is True", "file": "aisrv_server_standard.py", "line": "708", "module": "aisrv", "process": "aisrv_server_standard", "function": "before_run"}
