@@ -1,0 +1,3 @@
+{"time": "2024-10-06 20:10:11.804297", "level": "INFO", "message": "learner model_file_sync, use modelpool, use_which_deep_learning_framework is pytorch", "file": "model_file_sync.py", "line": "155", "module": "learner", "process": "model_file_sync", "function": "before_run"}
+{"time": "2024-10-06 20:10:11.806936", "level": "INFO", "message": "model_file_sync process pid is 110346", "file": "model_file_sync.py", "line": "161", "module": "learner", "process": "model_file_sync", "function": "before_run"}
+{"time": "2024-10-06 20:10:11.808140", "level": "INFO", "message": "model_file_sync mkdir /data/ckpt/hok1v1_ppo/convert_models_learner success", "file": "model_file_sync.py", "line": "133", "module": "learner", "process": "model_file_sync", "function": "make_model_dirs"}

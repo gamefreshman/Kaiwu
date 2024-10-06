@@ -212,7 +212,7 @@ class Model(nn.Module):
             bidirectional=False,
         )
 
-        self.parallel_mlp = MLP([self.lstm_unit_size, 1024, self.lstm_unit_size - self.lstm_real_size], "parallel_mlp", non_linearity_last=True)
+        self.parallel_mlp = MLP([self.lstm_unit_size, 1194, self.lstm_unit_size - self.lstm_real_size], "parallel_mlp", non_linearity_last=True)
 
         """output label"""
         extra_dim = [0, 12, 12, 12, 12]

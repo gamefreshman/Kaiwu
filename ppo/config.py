@@ -108,12 +108,12 @@ class GameConfig:
         "tower_hp_point": 15,
         "money": 0.009,
         "exp": 0.006,
-        "ep_rate": 0.1,
+        "ep_rate": 0.01,
         "death": -1.0,
         "kill": 1.0,
         "last_hit": 0.5,
         "forward": 0.01,
-        "close_to_cake": 0,
+        "close_to_cake": 0.01,
         "extra_mov_spd": 0.003,
         "kill_monster": 0.4,
         "hit_target": 3.0,
@@ -126,12 +126,12 @@ class GameConfig:
         "tower_hp_point": 40,
         "money": 0.005,
         "exp": 0.003,
-        "ep_rate": 0.06,
+        "ep_rate": 0.006,
         "death": -0.8,
         "kill": -0.4,
         "last_hit": 0.4,
         "forward": 0.0085,
-        "close_to_cake": 0,
+        "close_to_cake": 0.0085,
         "extra_mov_spd": 0.0038,
         "kill_monster": 0.5,
         "hit_target": 2.0,
@@ -144,12 +144,12 @@ class GameConfig:
         "tower_hp_point": 20,
         "money": 0.0015,
         "exp": 0.0005,
-        "ep_rate": 0.01,
+        "ep_rate": 0.001,
         "death": -0.6,
         "kill": -0.3,
         "last_hit": 0.05,
         "forward": 0.003,
-        "close_to_cake": 0,
+        "close_to_cake": 0.003,
         "extra_mov_spd": 0.0009,
         "kill_monster": 0.15,
         "hit_target": 1.0,
@@ -161,12 +161,12 @@ class GameConfig:
         "tower_hp_point": 12.5,
         "money": 0.0005,
         "exp": 0,
-        "ep_rate": 0.003,
+        "ep_rate": 0,
         "death": -0.4,
         "kill": -0.2,
         "last_hit": 0,
         "forward": 0.00215,
-        "close_to_cake": 0,
+        "close_to_cake": 0.00215,
         "extra_mov_spd": 0.0006,
         "kill_monster": 0.08,
         "hit_target": 0.5,
@@ -222,8 +222,8 @@ class DimConfig:
 class Config:
     NETWORK_NAME = "network"
     LSTM_TIME_STEPS = 16
-    LSTM_UNIT_SIZE = 512
-    LSTM_REAL_SIZE = 384
+    LSTM_UNIT_SIZE = 1024
+    LSTM_REAL_SIZE = 256
     DATA_SPLIT_SHAPE = [
         810+114+buff_info_len,
         1, # multi-head value 5
@@ -247,8 +247,8 @@ class Config:
         1,
         1,
         1,
-        384,
-        384,
+        256,
+        256,
     ]
     SERI_VEC_SPLIT_SHAPE = [(725+114+buff_info_len,), (85,)]
     INIT_LEARNING_RATE_START = 1e-4
@@ -293,8 +293,8 @@ class Config:
         [16],
         [16],
         [16],
-        [384],
-        [384],
+        [256],
+        [256],
     ]
 
     LEGAL_ACTION_SIZE_LIST = LABEL_SIZE_LIST.copy()
@@ -310,5 +310,5 @@ class Config:
     # For instance, the dimension for ppo is 15584,
     # learner上reverb样本的输入维度, 注意不同的算法维度不一样, 比如示例代码中ppo的维度是15584
     # **注意**，此项必须正确配置，应该与definition.py中的NumpyData2SampleData函数数据对齐，否则可能报样本维度错误
-    SAMPLE_DIM = 15584+114*16+buff_info_len*16-128*2
+    SAMPLE_DIM = 15584+114*16+buff_info_len*16-256*2
     # SAMPLE_DIM = np.sum(data_shapes)

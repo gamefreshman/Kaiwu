@@ -16,6 +16,7 @@ import random
 import itertools
 import os
 import json
+from collections import OrderedDict
 
 from ppo.config import GameConfig
 
@@ -44,6 +45,9 @@ def _lineup_iterator_shuffle_cycle(camps):  # 生成器函数，它对输入的�
         for camp in camps:
             yield camp
 
+# 508对一切
+# 133对508
+# 199对133，508
 
 # Specify single-side multi-agent lineups, looping through all pairwise combinations
 # 指定单边多智能体阵容，两两组合循环
@@ -65,8 +69,12 @@ def lineup_iterator_roundrobin_camp_heroes(camp_heroes=None):
         camp = []
         for lineup in lineups:
             camp.append(lineup)
+        # if 508 in camp:
+        #     camps.append(camp)
+        # if 133 in camp and 199 in camp:
+        #     camps.append(camp)
         camps.append(camp)
-    return _lineup_iterator_shuffle_cycle(camps) #返回迭代器
+    return _lineup_iterator_shuffle_cycle(camps)
 
 
 @attached
@@ -164,12 +172,10 @@ def build_frame(agent, state_dict):
         legal_action=legal_action.reshape([-1]),
         action=action,
         reward=reward,
-
         reward_sum=0,
         value=value.flatten()[0],
         next_value=0,
         advantage=0,
-
         prob=prob,
         sub_action=sub_action_mask[action[0]],
         lstm_info=np.concatenate([lstm_cell.flatten(), lstm_hidden.flatten()]).reshape([-1]),
@@ -201,6 +207,10 @@ class FrameCollector:
         # load config from config file
         self.gamma = Config.GAMMA
         self.lamda = Config.LAMDA
+        self.last_data_size = 8
+        self.last_sample_batch = [[] for _ in range(2)]
+        self.last_sample_lstm = [[] for _ in range(2)]
+        self.is_first_frame = [1, 1]
 
     def reset(self, num_agents):
         self.num_agents = num_agents
@@ -291,13 +301,16 @@ class FrameCollector:
     # Create the sample for the current frame
     # 根据LSTM_TIME_STEPS，组合送入样本池的样本
     def _format_data(self):
+          
         sample_one_size = np.sum(self._data_shapes[:-2]) // self._LSTM_FRAME    # 计算了每个样本的特征总维度
         sample_lstm_size = np.sum(self._data_shapes[-2:])                       # 计算了用于 LSTM 的特定维度大小
         sample_batch = np.zeros([self._LSTM_FRAME, sample_one_size])            # 存储每个样本的特征
         first_frame_no = -1                                                     # 保存第一帧的编号
 
-        for i in range(self.num_agents):
-            sample_lstm = np.zeros([sample_lstm_size])                          # 用来存储 LSTM 格式化的数据
+        for i in range(self.num_agents):                         # 用来存储 LSTM 格式化的数据
+            have_bullet = False
+            sample_lstm = np.zeros([sample_lstm_size])
+
             cnt = 0
             for j in self.rl_data_map[i]:
                 rl_info = self.rl_data_map[i][j]
@@ -313,7 +326,11 @@ class FrameCollector:
                 sample_batch[cnt, idx : idx + dlen] = rl_info.feature
                 idx += dlen
 
-                # legal_action  提取 legal_action 并填充。
+                # 判断是否有bullet
+                have_bullet = ((sum(rl_info.feature[726:756]) != 0) or have_bullet)
+                print(have_bullet)
+
+                # legal_action
                 dlen = rl_info.legal_action.shape[0]
                 sample_batch[cnt, idx : idx + dlen] = rl_info.legal_action
                 idx += dlen
@@ -353,11 +370,23 @@ class FrameCollector:
                 assert idx == sample_one_size, "Sample check failed, {}/{}".format(idx, sample_one_size)
 
                 cnt += 1
+                if cnt == self.last_data_size and self.is_first_frame[i] == 0:
+                    self.last_sample_lstm[i] = rl_info.lstm_info
                 if cnt == self._LSTM_FRAME:
                     cnt = 0
+                    if self.is_first_frame[i] == 0:
+                        input = np.vstack((self.last_sample_batch[i], sample_batch[:self.last_data_size]))
+                        sample = self._reshape_lstm_batch_sample(input, self.last_sample_lstm[i])
+                        self.m_replay_buffer[i].append(sample)
                     sample = self._reshape_lstm_batch_sample(sample_batch, sample_lstm)
                     self.m_replay_buffer[i].append(sample)
+                    if have_bullet:
+                        self.m_replay_buffer[i].append(sample)
+                    self.last_sample_batch[i] = sample_batch[-self.last_data_size:]
+                    if self.is_first_frame[i] == 1:
+                        self.is_first_frame[i] = 0
                     sample_lstm = rl_info.lstm_info
+                    have_bullet = False
 
     def _clip_reward(self, reward, max=100, min=-100):  #奖励裁剪函数，用于将奖励限制在指定的区间范围 ? 这个范围是怎么确定的
         if reward > max:

@@ -64,7 +64,11 @@ learner_train_by_while_true = true
 learner_train_sleep_seconds = 3.0
 
 # 下面是replay buffer的相关配置
+<<<<<<< HEAD
 replay_buffer_capacity = 8192
+=======
+replay_buffer_capacity = 10000
+>>>>>>> 8390a0d20af5826b6858c86b00c353adb484caec
 preload_ratio = 2
 
 # learner上reverb样本的输入维度, 注意不同的算法维度不一样, 比如ppo的维度是15584

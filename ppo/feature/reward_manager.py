@@ -321,7 +321,7 @@ class GameRewardManager:
             )
             hero_dist = min(math.dist(main_hero_pos, enemy_hero_pos), main_hero_atk_range)
         kiting_reward = (hero_dist - main_hero_atk_range) / main_hero_atk_range
-        if main_hero["actor_state"]["config_id"] == 199:
+        if main_hero["actor_state"]["config_id"] == 199 or main_hero["actor_state"]["config_id"] == 508:
             kiting_reward *= 3
         return kiting_reward
 
@@ -345,7 +345,7 @@ class GameRewardManager:
                 if hit_target == enemy_hero["actor_state"]["runtime_id"] and (skill_id//100) == main_hero_id:
                     skillNo = (skill_id//10) %10
                     if main_hero_id == 508 and skillNo == 0 and main_hero["actor_state"]["attack_range"] == 9500:
-                        hit_reward += skill_hit_reward_weight[main_hero_id][skillNo] * hero_coef * 3
+                        hit_reward += skill_hit_reward_weight[main_hero_id][skillNo] * hero_coef * 8
                     else:
                         hit_reward += skill_hit_reward_weight[main_hero_id][skillNo] * hero_coef
                 # other
@@ -527,6 +527,7 @@ class GameRewardManager:
         # delta_time = int(this_time - self.start_time)
         # self.time_step = min(int(delta_time / (rewardChangeInterval / rewardChangeStep)), rewardChangeStep-1)
         timeNode = 7200
+        
         # print(delta_time, self.time_step)
         frame_no = frame_data['frameNo']
         stageNo = 0

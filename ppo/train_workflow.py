@@ -90,12 +90,12 @@ def run_episodes(envs, agents, logger, monitor):
         if is_eval:
             # The model used by the opponent: "common_ai" - rule-based agent, model_id - opponent model ID, see kaiwu.json for details
             # 设置评估时的对手智能体类型，默认采用了common_ai，可选择: "common_ai" - 基于规则的智能体, model_id - 对手模型的ID, 模型ID内容可在kaiwu.json里查看和设置
-            #opponent_agent = "common_ai"
+            opponent_agent = "common_ai"
             # opponent_agent = "24259"
-            opponent_agent = np.random.choice(["common_ai", "29946", "30470"]) #对手模型随机选择    #监控：某个胜率越高：代表 训练模型 打 某个对手模型 的胜率越高
+            # opponent_agent = np.random.choice(["common_ai", "29946", "30470"])
 
         # Generate a new set of agent configurations
-        # 生成一组新的智能体对手配置
+        # 生成一组新的智能体配置
         heroes_config = next(lineup_iter)
 
         usr_conf = {
@@ -242,6 +242,11 @@ def run_episodes(envs, agents, logger, monitor):
                         total_reward_dicts[i][key] = value
 
             step += 1
+
+            # 调试用
+            # if len(frame_collector) > 64:
+            #     list_agents_samples = sample_process(frame_collector)
+            #     yield list_agents_samples
 
             # Normal end or timeout exit
             # 正常结束或超时退出
