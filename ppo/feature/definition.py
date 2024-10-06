@@ -169,7 +169,7 @@ def build_frame(agent, state_dict):
         value=value.flatten()[0],
         next_value=0,
         advantage=0,
-        
+
         prob=prob,
         sub_action=sub_action_mask[action[0]],
         lstm_info=np.concatenate([lstm_cell.flatten(), lstm_hidden.flatten()]).reshape([-1]),
@@ -291,13 +291,13 @@ class FrameCollector:
     # Create the sample for the current frame
     # 根据LSTM_TIME_STEPS，组合送入样本池的样本
     def _format_data(self):
-        sample_one_size = np.sum(self._data_shapes[:-2]) // self._LSTM_FRAME
-        sample_lstm_size = np.sum(self._data_shapes[-2:])
-        sample_batch = np.zeros([self._LSTM_FRAME, sample_one_size])
-        first_frame_no = -1
+        sample_one_size = np.sum(self._data_shapes[:-2]) // self._LSTM_FRAME    # 计算了每个样本的特征总维度
+        sample_lstm_size = np.sum(self._data_shapes[-2:])                       # 计算了用于 LSTM 的特定维度大小
+        sample_batch = np.zeros([self._LSTM_FRAME, sample_one_size])            # 存储每个样本的特征
+        first_frame_no = -1                                                     # 保存第一帧的编号
 
         for i in range(self.num_agents):
-            sample_lstm = np.zeros([sample_lstm_size])
+            sample_lstm = np.zeros([sample_lstm_size])                          # 用来存储 LSTM 格式化的数据
             cnt = 0
             for j in self.rl_data_map[i]:
                 rl_info = self.rl_data_map[i][j]
@@ -308,17 +308,17 @@ class FrameCollector:
                 # serilize one frames
                 idx, dlen = 0, 0
 
-                # vec_data
+                # vec_data  提取特征向量 rl_info.feature 并填充到 sample_batch 中。
                 dlen = rl_info.feature.shape[0]
                 sample_batch[cnt, idx : idx + dlen] = rl_info.feature
                 idx += dlen
 
-                # legal_action
+                # legal_action  提取 legal_action 并填充。
                 dlen = rl_info.legal_action.shape[0]
                 sample_batch[cnt, idx : idx + dlen] = rl_info.legal_action
                 idx += dlen
 
-                # reward_sum & advantage
+                # reward_sum & advantage    将 reward_sum 和 advantage 分别填充到样本。
                 # sample_batch[cnt, idx: idx + 5] = rl_info.multi_reward_sum
                 # idx += 5
                 # sample_batch[cnt, idx: idx + 5] = rl_info.advantage
@@ -328,12 +328,12 @@ class FrameCollector:
                 sample_batch[cnt, idx] = rl_info.advantage
                 idx += 1
 
-                # labels
+                # labels                    提取 action（长度为6）填充。
                 dlen = 6
                 sample_batch[cnt, idx : idx + dlen] = rl_info.action
                 idx += dlen
 
-                # probs (neg log pi->prob)
+                # probs (neg log pi->prob)  计算并填充每个动作的概率 prob。
                 for p in rl_info.prob:
                     dlen = len(p)
                     # p = np.exp(-nlp)
@@ -341,12 +341,12 @@ class FrameCollector:
                     sample_batch[cnt, idx : idx + dlen] = p
                     idx += dlen
 
-                # sub_action
+                # sub_action                将 sub_action（长度为6）填充。
                 dlen = 6
                 sample_batch[cnt, idx : idx + dlen] = rl_info.sub_action
                 idx += dlen
 
-                # is_train
+                # is_train                  将 is_train（长度为1）填充。
                 sample_batch[cnt, idx] = rl_info.is_train
                 idx += 1
 
