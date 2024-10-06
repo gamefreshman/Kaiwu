@@ -66,15 +66,15 @@ def run_episodes(envs, agents, logger, monitor):
     lineup_iter = lineup_iterator_roundrobin_camp_heroes(camp_heroes=GameConfig.CAMP_HEROES)
     # Frame Collector
     # 帧收集器
-    frame_collector = FrameCollector(agent_num)     # ？
+    frame_collector = FrameCollector(agent_num)     # 详情见ppo/feature/definition.py
     # Make eval matches as evenly distributed as possible
     # 引入随机因子，让eval对局尽可能平均分布
-    random_eval_start = random.randint(0, GameConfig.EVAL_FREQ)     # ？
+    random_eval_start = random.randint(0, GameConfig.EVAL_FREQ)
 
     # Single environment process (30 frame/s)
     # 单局流程 (30 frame/s)
     while True:
-        high_difficulty_samples = []    # ？
+        high_difficulty_samples = []    # 高价值样本多学习？
 
         # Settings before starting a new environment
         # 以下是启动一个新对局前的设置

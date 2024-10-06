@@ -33,12 +33,12 @@ ActData = create_cls(
     lstm_hidden=None,
 )
 
-NONE_ACTION = [0, 15, 15, 15, 15, 0]
+NONE_ACTION = [0, 15, 15, 15, 15, 0]    # ？
 
 
 # Loop through camps, shuffling camps before each major loop
 # 循环返回camps, 每次大循环前对camps进行shuffle
-def _lineup_iterator_shuffle_cycle(camps):
+def _lineup_iterator_shuffle_cycle(camps):  # 生成器函数，它对输入的阵营进行打乱，然后无限循环地返回随机顺序的阵营。
     while True:
         random.shuffle(camps)   #shuffle打乱顺序
         for camp in camps:
@@ -73,7 +73,7 @@ def lineup_iterator_roundrobin_camp_heroes(camp_heroes=None):
 def sample_process(collector):
     return collector.sample_process()
 
-bullet_type_set = {
+bullet_type_set = {     # ？ 这三兄贵是怎么作用的
     133: set(),
     199: set(),
     508: set(),
@@ -89,24 +89,27 @@ buff_set = set()
 # 创建当前帧的样本
 def build_frame(agent, state_dict):
     obs_data, act_data = agent.obs_data, agent.act_data
+
     # get is_train
-    is_train = False
-    frame_state = state_dict["frame_state"]
-    hero_list = frame_state["hero_states"]
-    frame_no = frame_state["frameNo"]
-    npc_list = frame_state["npc_states"]
-    main_hero_player_id = state_dict['player_id']
-    main_hero = None
+    is_train = False                                        # 用于区分智能体是否在训练模式下，通过判断英雄的生命值 (hero_hp) 来确定是否继续训练。
+    frame_state = state_dict["frame_state"]                 # 获取当前帧的状态信息
+    hero_list = frame_state["hero_states"]                  # 获取当前帧的英雄状态信息
+    frame_no = frame_state["frameNo"]                       # 获取当前帧的帧号
+    npc_list = frame_state["npc_states"]                    # 获取当前帧的NPC状态信息
+    main_hero_player_id = state_dict['player_id']           # 获取主英雄的player_id
+    main_hero = None                                        
     enemy_hero = None
-    for hero in hero_list:
+    for hero in hero_list:                                  # 提取英雄阵营、生命值和玩家 ID
         hero_camp = hero["actor_state"]["camp"]
         hero_hp = hero["actor_state"]["hp"]
+
         hero_player_id = hero["player_id"]
-        if hero_player_id == main_hero_player_id:
+        if hero_player_id == main_hero_player_id:           # 判断是否是主英雄。如果是，将其信息存储到 main_hero；如果不是，则存储到 enemy_hero。
             main_hero = hero
         else:
             enemy_hero = hero
-        if hero_camp == agent.hero_camp:
+
+        if hero_camp == agent.hero_camp:                    # 如果英雄阵营与智能体的阵营相同，则将其生命值存储到 hero_hp。
             is_train = True if hero_hp > 0 else False
 
     if obs_data.feature is not None:
@@ -130,12 +133,13 @@ def build_frame(agent, state_dict):
         
     # assert round(sum(multi_reward), 4) == round(state_dict["reward"]["reward_sum"], 4)
 
-    sub_action_mask = state_dict["sub_action_mask"]
+    sub_action_mask = state_dict["sub_action_mask"]     #获取子动作掩码
 
     prob, value, action = act_data.prob, act_data.value, act_data.action
-    lstm_cell, lstm_hidden = act_data.lstm_cell, act_data.lstm_hidden
+    lstm_cell, lstm_hidden = act_data.lstm_cell, act_data.lstm_hidden       #在时间序列的强化学习模型中，LSTM（长短期记忆网络）可以帮助模型记住之前的状态。
+                                                                            #这里从动作数据中提取了 LSTM 的 cell 和 hidden 状态，用于后续的序列决策。
 
-    legal_action = _update_legal_action(state_dict["legal_action"], action)
+    legal_action = _update_legal_action(state_dict["legal_action"], action)     #更新合法的动作空间
     #multi-head value
     # frame = Frame(
     #     frame_no=frame_no,
@@ -155,15 +159,17 @@ def build_frame(agent, state_dict):
     #     is_train=False if action[0] < 0 else is_train,
     # )
     frame = Frame(
-        frame_no=frame_no,
+        frame_no=frame_no,                                  
         feature=feature_vec.reshape([-1]),
         legal_action=legal_action.reshape([-1]),
         action=action,
         reward=reward,
+
         reward_sum=0,
         value=value.flatten()[0],
         next_value=0,
         advantage=0,
+        
         prob=prob,
         sub_action=sub_action_mask[action[0]],
         lstm_info=np.concatenate([lstm_cell.flatten(), lstm_hidden.flatten()]).reshape([-1]),
@@ -173,7 +179,7 @@ def build_frame(agent, state_dict):
 
 # Construct legal_action based on the actual action taken
 # 根据实际采用的action，构建legal_action
-def _update_legal_action(original_la, action):
+def _update_legal_action(original_la, action):  #这个函数用于根据智能体执行的动作更新合法的动作空间。不同的状态允许执行不同的动作
     target_size = Config.LABEL_SIZE_LIST[-1]
     top_size = Config.LABEL_SIZE_LIST[0]
     original_la = np.array(original_la)
@@ -258,7 +264,7 @@ class FrameCollector:
         for i in range(self.num_agents):
             reversed_keys = list(self.rl_data_map[i].keys())
             reversed_keys.reverse()
-            gae, last_gae = 0.0, 0.0
+            gae, last_gae = 0.0, 0.0    # ? 没使用到上一次的gae
             for j in reversed_keys:
                 rl_info = self.rl_data_map[i][j]
                 delta = -rl_info.value + rl_info.reward + self.gamma * rl_info.next_value
@@ -269,6 +275,8 @@ class FrameCollector:
     # For every LSTM_TIME_STEPS samples, concatenate 1 LSTM state
     # 每LSTM_TIME_STEPS个样本，需要拼接1个lstm状态
     def _reshape_lstm_batch_sample(self, sample_batch, sample_lstm):
+        # LSTM网络在处理序列数据时，需要将多个时间步长的数据一起处理。这个函数负责将时间步长样本和LSTM状态拼接在一起，形成一个完整的样本用于训练。
+
         sample = np.zeros([np.prod(sample_batch.shape) + np.prod(sample_lstm.shape)])
         idx, s_idx = 0, 0
 
@@ -351,7 +359,7 @@ class FrameCollector:
                     self.m_replay_buffer[i].append(sample)
                     sample_lstm = rl_info.lstm_info
 
-    def _clip_reward(self, reward, max=100, min=-100):
+    def _clip_reward(self, reward, max=100, min=-100):  #奖励裁剪函数，用于将奖励限制在指定的区间范围 ? 这个范围是怎么确定的
         if reward > max:
             reward = max
         elif reward < min:
